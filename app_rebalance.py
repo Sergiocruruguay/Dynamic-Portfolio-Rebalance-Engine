@@ -68,11 +68,11 @@ if boton_analizar:
                 # Punto óptimo (Max Sharpe)
                 fig.add_trace(go.Scatter(
                     x=[resultado_opt['volatilidad']], y=[resultado_opt['retorno'] * 100],
-                    mode='markers', marker=dict(color='emerald', size=14, symbol='star', line=dict(color='black', width=1.5)),
+                    mode='markers', marker=dict(color='yellow', size=14, symbol='star', line=dict(color='black', width=1.5)),
                     name='Objetivo Eficiente (Max Sharpe)'
                 ))
                 
-                # Punto donde está parado el usuario actualmente (Parpadeante simulado)
+                # Punto donde está parado el usuario actualmente
                 fig.add_trace(go.Scatter(
                     x=[vol_actual], y=[ret_actual * 100],
                     mode='markers', marker=dict(color='red', size=15, symbol='circle', line=dict(color='white', width=2)),
@@ -87,14 +87,52 @@ if boton_analizar:
                 st.subheader('📊 Diagnóstico de Rebalanceo y Fricción de Costos')
                 
                 vol_negociado, costo_trans = calcular_impacto_rebalanceo(pesos_actuales, pesos_optimos, capital_total)
+                perdida_sharpe = resultado_opt['sharpe'] - sharpe_actual
                 
                 c1, c2, c3 = st.columns(3)
-                c1.metric("Pérdida de Eficiencia (Sharpe)", f"-{resultado_opt['sharpe'] - sharpe_actual:.2f}", help="Diferencia de eficiencia entre el óptimo y tu cartera actual")
+                c1.metric("Pérdida de Eficiencia (Sharpe)", f"-{perdida_sharpe:.2f}", help="Diferencia de eficiencia entre el óptimo y tu cartera actual")
                 c2.metric("Volumen de Capital a Mover", f"USD {vol_negociado:,.2f}")
                 c3.metric("Costo de Transacción Est. (0.2%)", f"USD {costo_trans:,.2f}")
                 
-                # Sugerencia de periodicidad
                 st.info("💡 **Frecuencia Recomendada de Monitoreo:** Debido a que el costo estimado de rebalanceo es bajo respecto al capital total, se sugiere un ajuste de tipo **Trimestral**. Esto permite que los activos respiren sin erosionar las ganancias por exceso de comisiones de corretaje.")
                 
+                # --- NUEVA SECCIÓN DOCENTE: DICTAMEN Y FUNDAMENTOS TEÓRICOS ---
+                st.markdown('---')
+                with st.expander("📖 Ver Informe de Auditoría y Memoria Técnica de Fundamentos", expanded=True):
+                    st.write("### 📝 Dictamen Analítico Personalizado")
+                    
+                    if perdida_sharpe > 0.15:
+                        diagnostico_narrativo = (
+                            f"El diagnóstico del portafolio revela una **desviación estructural significativa** respecto a la "
+                            f"Frontera Eficiente. Tu asignación actual presenta una pérdida de eficiencia del Sharpe de {perdida_sharpe:.2f} "
+                            f"en comparación con el óptimo teórico. Esto significa que estás asumiendo niveles de volatilidad innecesarios "
+                            f"para el retorno esperado que estás cosechando, o bien estás sacrificando rendimiento potencial por fallas de diversificación."
+                        )
+                    else:
+                        diagnostico_narrativo = (
+                            f"El portafolio actual exhibe una **excelente proximidad** al límite eficiente. La sintonía con el punto "
+                            f"óptimo mantiene la pérdida de Sharpe en un marginal {perdida_sharpe:.2f}. Bajo las condiciones "
+                            f"vigentes de mercado, la estructura actual defiende correctamente la relación riesgo-beneficio."
+                        )
+                        
+                    st.markdown(diagnostico_narrativo)
+                    
+                    st.write("---")
+                    st.write("### 🧠 Fundamentos Teóricos y Doctrina Financiera")
+                    
+                    st.markdown("""
+                    La arquitectura de este gestor dinámico se apoya sobre tres pilares conceptuales de la econometría moderna:
+                    
+                    1. **La Parábola Dispersa de Markowitz:** En el gráfico de arriba, la nube de puntos dibuja un mapa espacial completo. La teoría demuestra que los inversores racionales jamás deben aceptar portafolios que se ubiquen en el centro o en el sector inferior de la nube. El algoritmo calcula de forma dinámica las varianzas mutuas (covarianzas) para guiar al capital hacia el borde exterior superior: **La Frontera Eficiente**.
+                    
+                    2. **La Desviación de Pesos (Drift Patrimonial):** Con el paso de los días en el mercado real, algunas acciones suben mucho de precio y otras caen. Esto causa que los pesos originales configurados se distorsionen solos de manera pasiva. Tu punto rojo se aleja de la estrella óptima. Esta sección audita esa 'fuga de eficiencia' en tiempo real.
+                    
+                    3. **La Fricción de Capital (Costos de Transacción):** Pasar del punto rojo (cartera actual) a la estrella (cartera óptima) no es gratis. Implica vender porciones de los activos sobreponderados y comprar los subponderados. El modelo matemático evalúa la distancia absoluta mediante el vector diferencia:
+                    $$\Delta W = |W_{\\text{actual}} - W_{\\text{óptimo}}|$$
+                    Multiplicando este volumen transaccional por la tasa de corretaje, determinamos el costo explícito del rebalanceo. De esta forma, el sistema te ayuda a decidir si vale la pena asumir el costo contable de la operación a cambio de recuperar la eficiencia perdida.
+                    """)
+                    
+                    st.caption("Nota de Auditoría: El presente marco didáctico sirve como base conceptual para procesos de optimización de carteras bajo la Teoría Moderna de Selección de Portafolios.")
+                    
             except Exception as e:
                 st.error(f"Error en la simulación dinámica: {e}")
